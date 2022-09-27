@@ -1,11 +1,13 @@
 import datetime
 import pendulum
 import os
-
+import logging
 import requests
+
 from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
+from airflow.models.variable import Variable
 
 
 @dag(
@@ -37,10 +39,15 @@ def ProcessEmployees():
     @task
     def get_data():
         # NOTE: configure this as appropriate for your airflow environment
-        data_path = "/opt/airflow/dags/files/employees.csv"
+        # data_path = "/opt/airflow/dags/files/employees.csv"
+        data_path = Variable.get("data_path")
         os.makedirs(os.path.dirname(data_path), exist_ok=True)
 
-        url = "https://raw.githubusercontent.com/apache/airflow/main/docs/apache-airflow/tutorial/pipeline_example.csv"
+        # url = "https://raw.githubusercontent.com/apache/airflow/main/docs/apache-airflow/tutorial/pipeline_example.csv"
+        url = Variable.get("url")
+
+        logging.info("data_path is {}".format(data_path))
+        logging.info("url is {}".format(url))
 
         response = requests.request("GET", url)
 
@@ -65,7 +72,7 @@ def ProcessEmployees():
             FROM (
                 SELECT DISTINCT *
                 FROM tutorial.employees_temp
-            )
+            ) AS et
             ON CONFLICT ("Serial Number") DO UPDATE
             SET "Serial Number" = excluded."Serial Number";
         """
@@ -77,6 +84,7 @@ def ProcessEmployees():
             conn.commit()
             return 0
         except Exception as e:
+            logging.error(e)
             return 1
 
     create_tutorial_schema >> [create_employees_table, create_employees_temp_table] >> get_data() >> merge_data()
