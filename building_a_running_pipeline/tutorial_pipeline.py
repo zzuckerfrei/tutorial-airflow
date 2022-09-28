@@ -66,23 +66,29 @@ def ProcessEmployees():
 
     @task
     def merge_data():
-        query = """
-            INSERT INTO tutorial.employees
-            SELECT *
-            FROM (
-                SELECT DISTINCT *
-                FROM tutorial.employees_temp
-            ) AS et
-            ON CONFLICT ("Serial Number") DO UPDATE
-            SET "Serial Number" = excluded."Serial Number";
-        """
+        # query = """
+        #     INSERT INTO tutorial.employees
+        #     SELECT *
+        #     FROM (
+        #         SELECT DISTINCT *
+        #         FROM tutorial.employees_temp
+        #     ) AS et
+        #     ON CONFLICT ("Serial Number") DO UPDATE
+        #     SET "Serial Number" = excluded."Serial Number";
+        # """
         try:
+            logging.info("now ...{}".format(os.path.dirname(os.path.realpath(__file__))))
+            with open(os.path.dirname(os.path.realpath(__file__)) + "/sql/insert_employees.sql", "r") as f:
+                query = f.read()
+            logging.info("query is ...{}".format(query))
+
             postgres_hook = PostgresHook(postgres_conn_id="tutorial_pg_conn")
             conn = postgres_hook.get_conn()
             cur = conn.cursor()
             cur.execute(query)
             conn.commit()
             return 0
+
         except Exception as e:
             logging.error(e)
             return 1
