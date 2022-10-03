@@ -16,7 +16,7 @@ from airflow.exceptions import AirflowTaskTimeout
     dag_id="backfill_master",
     catchup=True,
     # dagrun_timeout=datetime.timedelta(seconds=5),
-    schedule_interval="* * * * *",
+    schedule_interval="0 0/5 * * *",  # 5시간마다 실행 0시, 5시, 10시, 15시, 20시
     start_date=pendulum.datetime(2022, 9, 29, tz="UTC"),
 )
 def BackfillMaster():
@@ -56,7 +56,7 @@ def BackfillMaster():
         except Exception as e:
             logging.info(e)
             raise AirflowTaskTimeout("time out!!! {} seconds".format(sleep_time))
-            return 1
+            # return 1
 
     # url에서 파일 받아오고, 파일이름을 받아온 날짜로 설정하고 저장함 : BashOperator -> PythonOperator
     @task
