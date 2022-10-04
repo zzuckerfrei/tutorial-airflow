@@ -20,22 +20,8 @@ from airflow.exceptions import AirflowTaskTimeout
     start_date=pendulum.datetime(2022, 9, 29, tz="UTC"),
 )
 def BackfillMaster():
-    # 1~10초 사이 랜덤으로 텀을 두게 만들고 : PythonOperator
-    # @task.python(
-    #     task_id="get_random",
-    #     execution_timeout=datetime.timedelta(seconds=5),
-    # )
-    # def get_random():
-    #     try:
-    #         sleep_time = random.randrange(1, 11)
-    #         logging.info("sleep_time is ... {}".format(sleep_time))
-    #
-    #         sleep(sleep_time)
-    #
-    #     except Exception as e:
-    #         logging.info(e)
-    #         return 1
-
+    # 1~10초 사이 랜덤으로 텀을 두게 만들고
+    # 5초 이상이면 task 종료
     # 현재 날짜 시간 얻기 : PythonOperator
     @task.python(
         task_id="get_datetime",
@@ -56,7 +42,6 @@ def BackfillMaster():
         except Exception as e:
             logging.info(e)
             raise AirflowTaskTimeout("time out!!! {} seconds".format(sleep_time))
-            # return 1
 
     # url에서 파일 받아오고, 파일이름을 받아온 날짜로 설정하고 저장함 : BashOperator -> PythonOperator
     @task
